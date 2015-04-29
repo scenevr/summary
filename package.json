@@ -2,6 +2,10 @@
   "name": "scenevr-summary",
   "version": "1.0.0",
   "description": "Create a search engine indexable summary of a scenevr scene by connecting over a websocket",
+  "repository" : { 
+    "type" : "git",
+    "url" : "https://github.com/scenevr/summary.git"
+  },
   "main": "index.js",
   "scripts": {
     "test": "semistandard && tape test.js"
