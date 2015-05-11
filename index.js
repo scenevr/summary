@@ -8,14 +8,15 @@ module.exports = function (url, callback) {
   var output = '<div style="font-family: arial; font-size: 24px; line-height: 150%; max-width: 512px; margin: 0 auto">';
 
   var baseUri = URI.parse(url);
-  baseUri.protocol = 'http';
+  baseUri.scheme = 'http';
 
   var parser = new htmlparser.Parser({
     onopentag: function (name, attribs) {
       tag = name;
 
       if (name === 'link') {
-        output += '<a href="/?connect=' + attribs.href.replace(/^\/\//, '') + '">' + attribs.href + '</a>\n';
+        var u = URI.resolve(URI.serialize(baseUri), attribs.href);
+        output += '<a href="/' + u.replace(/^.+?\/\//, '') + '">' + attribs.href + '</a>\n';
       }
 
       if (name === 'model') {
@@ -41,6 +42,7 @@ module.exports = function (url, callback) {
   ws.on('open', function open () {
     // Cancel connection after 5 seconds
     timeout = setTimeout(function () {
+      ws.removeAllListeners();
       ws.close();
       callback('timeout');
     }, 5000);
@@ -48,20 +50,22 @@ module.exports = function (url, callback) {
 
   ws.on('error', function (err) {
     clearTimeout(timeout);
+    ws.removeAllListeners();
     ws.close();
     callback(err);
   });
-  
+
   ws.on('message', function (data, flags) {
     if (data.match(/<spawn/)) {
       parser.write(data);
       parser.end();
 
       clearTimeout(timeout);
+      ws.removeAllListeners();
       ws.close();
-  
+
       output += '</div>';
-      callback(false, output);
+      callback(null, output);
     }
   });
 };
